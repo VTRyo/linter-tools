@@ -1,0 +1,69 @@
+version: 2.1
+
+executors:
+  prepare:
+    docker:
+      - image: alpine/git:latest
+  prh:
+    docker:
+      - image: vtryo/prh:1.0.0
+  redpen:
+    docker:
+      - image: vtryo/redpen:1.0.0
+
+references:
+  commands:
+    install_ca_certificates: &install_ca_certificates
+      name: install ca-certificates
+      command: apk --update add ca-certificates
+    
+    install_git: &install_git
+      name: install git
+      command: apk --update add git
+
+    install_reviewdog: &install_reviewdog
+      name: install reviewdog
+      command: |
+        GITHUB_URL=https://raw.githubusercontent.com/reviewdog/reviewdog && \
+        INSTALL_URL=${GITHUB_URL}/master/install.sh && \
+        wget -O - -q ${INSTALL_URL} | sh -s
+
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - prepare
+      - prh:
+          requires:
+            - prepare
+      - redpen:
+          requires:
+            - prepare
+
+jobs:
+  prepare:
+    executor: prepare
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: .
+          paths: .
+  prh:
+    executor: prh
+    steps:
+      - run: *install_ca_certificates
+      # - run: *install_git
+      # - run: *install_reviewdog
+      - attach_workspace:
+          at: .
+      - run: .circleci/scripts/prh.sh
+  redpen:
+    executor: redpen
+    steps:
+      - run: *install_ca_certificates
+      # - run: *install_git
+      # - run: *install_reviewdog
+      - attach_workspace:
+          at: .
+      - run: .circleci/scripts/redpen.sh

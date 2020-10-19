@@ -1,0 +1,4 @@
+# 以下を実行すると文字がexpectedに定義された表記へ変換されます。
+# docker run --rm -v $PWD:/work prh --replace sample.txt
+cookie
+ハードウェアー
